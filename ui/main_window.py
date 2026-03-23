@@ -139,6 +139,7 @@ class MainWindow(QMainWindow):
         review_splitter = QSplitter(Qt.Vertical)
         self.group_panel = GroupPanel()
         self.group_panel.group_selected.connect(self._on_group_selected)
+        self.group_panel.group_delete_requested.connect(self._on_delete_group)
         review_splitter.addWidget(self.group_panel)
         self.review_panel = ReviewPanel()
         self.review_panel.classification_confirmed.connect(self._on_classification_confirmed)
@@ -168,6 +169,9 @@ class MainWindow(QMainWindow):
         act_save.triggered.connect(self._on_manual_save)
         act_settings = file_menu.addAction("设置...")
         act_settings.triggered.connect(self._on_settings)
+        file_menu.addSeparator()
+        act_clear_groups = file_menu.addAction("🗑 清除所有分组数据...")
+        act_clear_groups.triggered.connect(self._on_clear_groups)
         file_menu.addSeparator()
         act_quit = file_menu.addAction("退出(&Q)")
         act_quit.setShortcut(QKeySequence.Quit)
@@ -318,6 +322,15 @@ class MainWindow(QMainWindow):
         if not self.db:
             QMessageBox.warning(self, "提示", "请先新建或打开项目数据库")
             return
+        if self.groups:
+            reply = QMessageBox.question(self, "重新扫描",
+                "已有分组数据，重新扫描将清除现有分组和文件数据。\n类别数据将保留。\n\n是否继续？",
+                QMessageBox.Yes | QMessageBox.Cancel, QMessageBox.Cancel)
+            if reply != QMessageBox.Yes:
+                return
+            self.db.clear_groups_and_files()
+            self.groups = []
+            self._refresh_group_list()
         dirs = QFileDialog.getExistingDirectory(self, "选择待分类文件目录")
         if not dirs:
             return
@@ -432,6 +445,29 @@ class MainWindow(QMainWindow):
         filter_map = {"全部": None, "待处理": "pending", "已自动分类": "auto",
                       "冲突": "conflict", "待确认": "confirm", "已确认": "confirmed", "已跳过": "skipped"}
         self.group_panel.set_filter(filter_map.get(text))
+
+    def _on_clear_groups(self):
+        if not self.db:
+            QMessageBox.warning(self, "提示", "请先打开项目")
+            return
+        reply = QMessageBox.question(self, "清除分组数据",
+            "将清除所有分组和文件数据。\n类别数据将保留。\n\n是否继续？",
+            QMessageBox.Yes | QMessageBox.Cancel, QMessageBox.Cancel)
+        if reply != QMessageBox.Yes:
+            return
+        self.db.clear_groups_and_files()
+        self.groups = []
+        self._refresh_group_list()
+        self._update_stats()
+        self.status_label.setText("已清除所有分组数据")
+
+    def _on_delete_group(self, group_id: int):
+        if not self.db:
+            return
+        self.db.delete_group(group_id)
+        self.groups = [g for g in self.groups if g.id != group_id]
+        self._refresh_group_list()
+        self._update_stats()
 
     def _refresh_group_list(self):
         self.group_panel.load_groups(self.groups)

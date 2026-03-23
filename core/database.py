@@ -364,6 +364,20 @@ class Database:
         self.mem.commit()
         self._mark_dirty()
 
+    def clear_groups_and_files(self):
+        """仅清除分组和文件数据，保留类别"""
+        self.mem.executescript("""
+            DELETE FROM media_files; DELETE FROM media_groups;
+        """)
+        self.mem.commit()
+        self._mark_dirty()
+
+    def delete_group(self, group_id: int):
+        self.mem.execute("DELETE FROM media_files WHERE group_id=?", (group_id,))
+        self.mem.execute("DELETE FROM media_groups WHERE id=?", (group_id,))
+        self.mem.commit()
+        self._mark_dirty()
+
     def get_export_data(self) -> list[dict]:
         rows = self.mem.execute("""
             SELECT f.id as file_id, f.path as file_path, f.filename, f.timestamp,

@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QBrush
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QTableWidget, QTableWidgetItem,
-    QHeaderView, QAbstractItemView, QLabel
+    QHeaderView, QAbstractItemView, QLabel, QMenu
 )
 
 from core.models import MediaGroup
@@ -33,6 +33,7 @@ STATUS_LABELS = {
 
 class GroupPanel(QWidget):
     group_selected = Signal(int)
+    group_delete_requested = Signal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -64,6 +65,8 @@ class GroupPanel(QWidget):
             "QTableWidget::item:selected { background-color: #1976D2; color: #fff; }"
         )
         self.table.itemSelectionChanged.connect(self._on_selection_changed)
+        self.table.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.table.customContextMenuRequested.connect(self._on_context_menu)
         layout.addWidget(self.table)
 
     def load_groups(self, groups: list[MediaGroup]):
@@ -110,6 +113,19 @@ class GroupPanel(QWidget):
             if item:
                 group_id = item.data(Qt.UserRole)
                 self.group_selected.emit(group_id)
+
+    def _on_context_menu(self, pos):
+        item = self.table.itemAt(pos)
+        if not item:
+            return
+        group_id = item.data(Qt.UserRole)
+        if group_id is None:
+            return
+        menu = QMenu(self)
+        act_delete = menu.addAction("🗑 删除此分组")
+        action = menu.exec(self.table.viewport().mapToGlobal(pos))
+        if action == act_delete:
+            self.group_delete_requested.emit(group_id)
 
     def select_next_pending(self):
         current_row = self.table.currentRow()
