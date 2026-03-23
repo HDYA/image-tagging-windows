@@ -405,7 +405,24 @@ class MainWindow(QMainWindow):
             if g.id == group_id:
                 group_data = g
                 break
-        self.review_panel.load_group(group_id, files, cats, group_data)
+        # 收集组内所有标注，用拼音索引查找推荐类别
+        tag_recommended_ids = set()
+        tags = set()
+        if group_data and group_data.detected_tag:
+            tags.add(group_data.detected_tag)
+        for f in files:
+            if f.file_tag:
+                tags.add(f.file_tag)
+        for tag in tags:
+            candidates, _ = self.pinyin_index.lookup(tag)
+            for c in candidates:
+                tag_recommended_ids.add(c.id)
+            if not candidates:
+                fuzzy = self.pinyin_index.fuzzy_lookup(tag, max_distance=1)
+                for c in fuzzy:
+                    tag_recommended_ids.add(c.id)
+        self.review_panel.load_group(group_id, files, cats, group_data,
+                                     extra_recommended_ids=tag_recommended_ids)
 
     def _on_classification_confirmed(self, group_id: int, category_id: int):
         if not self.db:

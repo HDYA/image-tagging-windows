@@ -169,7 +169,8 @@ def group_by_time(files: list[MediaFile], gap_seconds: float = 10.0,
                   large_threshold: int = 20) -> list[MediaGroup]:
     if not files:
         return []
-    groups: list[MediaGroup] = []
+    # 第一步: 按时间间隔初步分组
+    time_groups: list[list[MediaFile]] = []
     current_files = [files[0]]
 
     for f in files[1:]:
@@ -181,14 +182,21 @@ def group_by_time(files: list[MediaFile], gap_seconds: float = 10.0,
                 continue
         if not f.timestamp:
             if current_files:
-                groups.append(_make_group(current_files, large_threshold))
+                time_groups.append(current_files)
             current_files = [f]
             continue
-        groups.append(_make_group(current_files, large_threshold))
+        time_groups.append(current_files)
         current_files = [f]
 
     if current_files:
-        groups.append(_make_group(current_files, large_threshold))
+        time_groups.append(current_files)
+
+    # 第二步: 按标注(tag)切分——同组内不同标注拆成不同组
+    groups: list[MediaGroup] = []
+    for file_list in time_groups:
+        sub = _split_by_tag(file_list)
+        for sub_files in sub:
+            groups.append(_make_group(sub_files, large_threshold))
 
     logger.info(f"分组完成: {len(groups)} 个组")
     sizes = [g.file_count for g in groups]
@@ -198,11 +206,30 @@ def group_by_time(files: list[MediaFile], gap_seconds: float = 10.0,
     return groups
 
 
+def _split_by_tag(files: list[MediaFile]) -> list[list[MediaFile]]:
+    """将同一时间组内标注不同的文件拆分为子组。
+
+    - 组内所有文件标注相同（或均无标注）→ 不拆分
+    - 组内存在不同标注 → 按标注值分组，无标注文件单独一组
+    """
+    tags = {f.file_tag for f in files if f.file_tag}
+    if len(tags) <= 1:
+        return [files]
+    # 多种标注: 按 tag 分桶
+    buckets: dict[Optional[str], list[MediaFile]] = {}
+    for f in files:
+        key = f.file_tag  # None for untagged
+        buckets.setdefault(key, []).append(f)
+    logger.info(f"标注切分: {len(files)} 个文件拆为 {len(buckets)} 子组, 标注={tags}")
+    # 按子组内最早时间戳排序，保持时间顺序
+    result = sorted(buckets.values(),
+                    key=lambda fl: min((f.timestamp for f in fl if f.timestamp), default=datetime.max))
+    return result
+
+
 def _make_group(files: list[MediaFile], large_threshold: int) -> MediaGroup:
     tags = [f.file_tag for f in files if f.file_tag]
     detected_tag = tags[0] if tags else None
-    if len(set(tags)) > 1:
-        logger.warning(f"组内有多个不同标注: {set(tags)}")
     timestamps = [f.timestamp for f in files if f.timestamp]
     group = MediaGroup(
         files=files,

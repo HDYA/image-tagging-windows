@@ -309,7 +309,8 @@ class ReviewPanel(QWidget):
         QShortcut(QKeySequence(Qt.Key_Escape), self, self._on_skip)
 
     def load_group(self, group_id: int, files: list[MediaFile],
-                   categories: list[CategoryNode], group: Optional[MediaGroup] = None):
+                   categories: list[CategoryNode], group: Optional[MediaGroup] = None,
+                   extra_recommended_ids: set[int] = None):
         self._current_group_id = group_id
         self._current_group = group
         self._files = files
@@ -359,9 +360,19 @@ class ReviewPanel(QWidget):
                 recommended.add(c.id)
         if group and group.category_id:
             recommended.add(group.category_id)
+        if extra_recommended_ids:
+            recommended.update(extra_recommended_ids)
         self._recommended_ids = recommended
         self.category_selector.set_recommended_ids(recommended)
-        self.category_selector.clear_search()
+        # 将检测到的标注自动填入搜索框
+        tag = group.detected_tag if group else None
+        if not tag:
+            tags = [f.file_tag for f in files if f.file_tag]
+            tag = tags[0] if tags else None
+        if tag and not group.category_id:
+            self.category_selector.set_search_text(tag)
+        else:
+            self.category_selector.clear_search()
         if group and group.category_id:
             self.category_selector.select_category_id(group.category_id)
         elif group and group.conflict_candidates:

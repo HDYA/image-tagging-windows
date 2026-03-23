@@ -115,6 +115,12 @@ class SmartCategorySelector(QWidget):
         self.list_view = QListView()
         self.list_view.setItemDelegate(CategoryItemDelegate(self.list_view))
         self.list_view.setAlternatingRowColors(True)
+        self.list_view.setStyleSheet(
+            "QListView { background-color: #fff; }"
+            "QListView::item { color: #222; }"
+            "QListView::item:alternate { background-color: #f7f7f7; }"
+            "QListView::item:selected { background-color: #1976D2; color: #fff; }"
+        )
         self.list_view.clicked.connect(self._on_item_clicked)
         self._source_model = QStandardItemModel()
         self._filter_model = CategoryFilterModel()
@@ -157,6 +163,9 @@ class SmartCategorySelector(QWidget):
     def clear_search(self):
         self.search_edit.clear()
 
+    def set_search_text(self, text: str):
+        self.search_edit.setText(text)
+
     def _rebuild_model(self):
         self._source_model.clear()
         for cat in self._categories:
@@ -177,6 +186,7 @@ class SmartCategorySelector(QWidget):
             item.setData(0 if is_rec else 1, ROLE_SORT_PRIORITY)
             if is_rec:
                 item.setBackground(QBrush(QColor(255, 253, 230)))
+            item.setForeground(QBrush(QColor(0, 0, 0)))
             self._source_model.appendRow(item)
         self._filter_model.sort(0)
         if self._recommended_ids and self._filter_model.rowCount() > 0:

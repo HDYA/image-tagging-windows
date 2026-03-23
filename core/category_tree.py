@@ -110,12 +110,12 @@ class PinyinIndex:
         for cat in categories:
             keys = set()
             if cat.pinyin_full:
-                keys.add(cat.pinyin_full)
+                keys.add(cat.pinyin_full.lower())
             if cat.pinyin_abbr:
-                keys.add(cat.pinyin_abbr)
+                keys.add(cat.pinyin_abbr.lower())
             for v in cat.pinyin_variants:
                 if v:
-                    keys.add(v)
+                    keys.add(v.lower())
             for key in keys:
                 if key not in self._exact:
                     self._exact[key] = []
