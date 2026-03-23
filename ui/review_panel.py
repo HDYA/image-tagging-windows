@@ -249,6 +249,7 @@ class ReviewPanel(QWidget):
     classification_confirmed = Signal(int, int)
     group_skipped = Signal(int)
     file_category_changed = Signal(int, object)
+    next_pending_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -294,6 +295,11 @@ class ReviewPanel(QWidget):
         self.btn_skip.setMinimumHeight(40)
         self.btn_skip.clicked.connect(self._on_skip)
         btn_col.addWidget(self.btn_skip)
+        self.btn_next_pending = QPushButton("⏩ 下一个未分类\n(Tab)")
+        self.btn_next_pending.setStyleSheet("background: #1976D2; color: white; padding: 8px 16px; font-size: 11px;")
+        self.btn_next_pending.setMinimumHeight(36)
+        self.btn_next_pending.clicked.connect(self._on_next_pending)
+        btn_col.addWidget(self.btn_next_pending)
         btn_col.addStretch()
         classify_layout.addLayout(btn_col)
         layout.addLayout(classify_layout, 1)
@@ -307,6 +313,7 @@ class ReviewPanel(QWidget):
         QShortcut(QKeySequence(Qt.Key_Return), self, self._on_confirm)
         QShortcut(QKeySequence(Qt.Key_Enter), self, self._on_confirm)
         QShortcut(QKeySequence(Qt.Key_Escape), self, self._on_skip)
+        QShortcut(QKeySequence(Qt.Key_Tab), self, self._on_next_pending)
 
     def load_group(self, group_id: int, files: list[MediaFile],
                    categories: list[CategoryNode], group: Optional[MediaGroup] = None,
@@ -434,3 +441,6 @@ class ReviewPanel(QWidget):
         if self._current_group_id is None:
             return
         self.group_skipped.emit(self._current_group_id)
+
+    def _on_next_pending(self):
+        self.next_pending_requested.emit()

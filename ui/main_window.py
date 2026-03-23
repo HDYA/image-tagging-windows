@@ -145,6 +145,7 @@ class MainWindow(QMainWindow):
         self.review_panel.classification_confirmed.connect(self._on_classification_confirmed)
         self.review_panel.group_skipped.connect(self._on_group_skipped)
         self.review_panel.file_category_changed.connect(self._on_file_category_changed)
+        self.review_panel.next_pending_requested.connect(self._on_next_pending)
         review_splitter.addWidget(self.review_panel)
         review_splitter.setSizes([400, 300])
         right_layout.addWidget(review_splitter)
@@ -450,6 +451,9 @@ class MainWindow(QMainWindow):
                 break
         self._refresh_group_list()
         self._update_stats()
+        self.group_panel.select_next_pending()
+
+    def _on_next_pending(self):
         self.group_panel.select_next_pending()
 
     def _on_file_category_changed(self, file_id: int, category_id):
