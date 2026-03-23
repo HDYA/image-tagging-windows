@@ -368,6 +368,7 @@ class Database:
         """仅清除分组和文件数据，保留类别"""
         self.mem.executescript("""
             DELETE FROM media_files; DELETE FROM media_groups;
+            DELETE FROM sqlite_sequence WHERE name IN ('media_files', 'media_groups');
         """)
         self.mem.commit()
         self._mark_dirty()
