@@ -1,0 +1,36 @@
+{
+  "source_dirs": [],
+  "archive_root": "",
+  "manual_category_file": "",
+
+  "group_gap_seconds": 10.0,
+  "large_group_threshold": 20,
+
+  "timestamp_priority": [
+    "exif",
+    "mtime",
+    "ctime",
+    "filename"
+  ],
+
+  "filename_time_patterns": [
+    "(?P<year>20\\d{2})(?P<month>[01]\\d)(?P<day>[0-3]\\d)[_\\-]?(?P<hour>[0-2]\\d)(?P<minute>[0-5]\\d)(?P<second>[0-5]\\d)",
+    "(?P<year>20\\d{2})[_\\-](?P<month>[01]\\d)[_\\-](?P<day>[0-3]\\d)[_\\-](?P<hour>[0-2]\\d)[_\\-](?P<minute>[0-5]\\d)[_\\-](?P<second>[0-5]\\d)",
+    "(?:mmexport|wx_camera_)(?P<unix_ms>\\d{13})",
+    "(?:Screenshot|screen)[_\\-](?P<unix_s>\\d{10})"
+  ],
+
+  "face_enabled": false,
+  "face_backend": "directml",
+  "face_threshold": 0.45,
+  "face_confirm_threshold": 0.55,
+  "face_sample_per_category": 20,
+
+  "db_path": "classifier.db",
+  "auto_save_interval": 60,
+
+  "tag_patterns": [
+    "[_\\-]([a-zA-Z]{2,})(?:\\.\\w+)?$",
+    "[_\\-]([a-zA-Z]{2,})[_\\-]\\d+(?:\\.\\w+)?$"
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "_comment": "此配置仅使用文件名中的时间戳，适合文件 mtime/ctime 已被修改（如网盘同步、复制粘贴后）但文件名保留原始拍摄时间的情况",
+
+  "source_dirs": [],
+  "archive_root": "",
+
+  "group_gap_seconds": 10.0,
+  "large_group_threshold": 20,
+
+  "timestamp_priority": [
+    "filename",
+    "exif"
+  ],
+
+  "filename_time_patterns": [
+    "(?P<year>20\\d{2})(?P<month>[01]\\d)(?P<day>[0-3]\\d)[_\\-]?(?P<hour>[0-2]\\d)(?P<minute>[0-5]\\d)(?P<second>[0-5]\\d)",
+    "(?P<year>20\\d{2})[_\\-](?P<month>[01]\\d)[_\\-](?P<day>[0-3]\\d)[_\\-](?P<hour>[0-2]\\d)[_\\-](?P<minute>[0-5]\\d)[_\\-](?P<second>[0-5]\\d)",
+    "(?:mmexport|wx_camera_)(?P<unix_ms>\\d{13})",
+    "(?:Screenshot|screen)[_\\-](?P<unix_s>\\d{10})"
+  ],
+
+  "face_enabled": false,
+  "face_backend": "cpu",
+
+  "db_path": "classifier.db"
+}

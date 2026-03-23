@@ -1,0 +1,28 @@
+{
+  "_comment": "此配置适用于文件修改时间比 EXIF 更可靠的场景 (如批量从手机导出后 EXIF 被清除)",
+
+  "source_dirs": [],
+  "archive_root": "",
+
+  "group_gap_seconds": 10.0,
+  "large_group_threshold": 20,
+
+  "timestamp_priority": [
+    "mtime",
+    "ctime",
+    "exif",
+    "filename"
+  ],
+
+  "face_enabled": false,
+  "face_backend": "cpu",
+  "face_threshold": 0.45,
+  "face_confirm_threshold": 0.55,
+
+  "db_path": "classifier.db",
+
+  "tag_patterns": [
+    "[_\\-]([a-zA-Z]{2,})(?:\\.\\w+)?$",
+    "[_\\-]([a-zA-Z]{2,})[_\\-]\\d+(?:\\.\\w+)?$"
+  ]
+}

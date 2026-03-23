@@ -1,0 +1,92 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+
+jobs:
+  build-windows:
+    strategy:
+      matrix:
+        include:
+          - arch: amd64
+            runner: windows-latest
+
+    runs-on: ${{ matrix.runner }}
+    name: Windows ${{ matrix.arch }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install nuitka ordered-set zstandard
+
+      - name: Build GUI
+        run: |
+          python -m nuitka `
+            --standalone `
+            --onefile `
+            --windows-console-mode=disable `
+            --enable-plugin=pyside6 `
+            --include-package=core `
+            --include-package=ui `
+            --output-filename=ImageTagging_${{ matrix.arch }}.exe `
+            --output-dir=dist `
+            --company-name="HDYA" `
+            --product-name="Image Tagging Desktop" `
+            --file-version=1.0.0 `
+            --product-version=1.0.0 `
+            main.py
+
+      - name: Build CLI
+        run: |
+          python -m nuitka `
+            --standalone `
+            --onefile `
+            --include-package=core `
+            --output-filename=ImageTaggingCLI_${{ matrix.arch }}.exe `
+            --output-dir=dist `
+            cli.py
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-tagging-windows-${{ matrix.arch }}
+          path: dist/*.exe
+
+  # ARM64: 需要自托管 runner 或 GitHub 未来提供 ARM64 runner
+  # 取消注释以下内容并配置自托管 runner
+  # build-windows-arm64:
+  #   runs-on: [self-hosted, Windows, ARM64]
+  #   name: Windows arm64
+  #   steps: ... (同上)
+
+  release:
+    needs: build-windows
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          merge-multiple: true
+          path: release/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: release/*.exe
+          generate_release_notes: true

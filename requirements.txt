@@ -1,0 +1,13 @@
+# Core dependencies
+PySide6>=6.6.0
+pypinyin>=0.51.0
+Pillow>=10.0.0
+exifread>=3.0.0
+
+# Face recognition (optional, install separately)
+# pip install insightface onnxruntime-directml
+# insightface>=0.7.3
+# onnxruntime-directml>=1.17.0
+
+# Build tools
+# pip install nuitka ordered-set zstandard
