@@ -267,6 +267,25 @@ class Database:
         """, (limit, offset)).fetchall()
         return [dict(r) for r in rows]
 
+    def load_all_groups_as_models(self) -> list[MediaGroup]:
+        rows = self.mem.execute("""
+            SELECT g.*, c.path as category_path FROM media_groups g
+            LEFT JOIN categories c ON g.category_id = c.id
+            ORDER BY g.time_start
+        """).fetchall()
+        groups = []
+        for r in rows:
+            ts = datetime.fromisoformat(r['time_start']) if r['time_start'] else None
+            te = datetime.fromisoformat(r['time_end']) if r['time_end'] else None
+            g = MediaGroup(
+                id=r['id'], time_start=ts, time_end=te,
+                file_count=r['file_count'], detected_tag=r['detected_tag'],
+                category_id=r['category_id'], category_path=r['category_path'],
+                confidence=r['confidence'] or 0.0, classify_method=r['classify_method'] or '',
+                status=r['status'] or 'pending')
+            groups.append(g)
+        return groups
+
     def get_group_count_by_status(self) -> dict[str, int]:
         rows = self.mem.execute("SELECT status, COUNT(*) as cnt FROM media_groups GROUP BY status").fetchall()
         return {r['status']: r['cnt'] for r in rows}

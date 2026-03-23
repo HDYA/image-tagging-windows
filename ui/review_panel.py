@@ -264,7 +264,7 @@ class ReviewPanel(QWidget):
         layout = QVBoxLayout(self)
         layout.setContentsMargins(4, 4, 4, 4)
         self.info_label = QLabel("选择一个分组进行审核")
-        self.info_label.setStyleSheet("font-size: 13px; padding: 4px; background: #f5f5f5; border-radius: 4px;")
+        self.info_label.setStyleSheet("font-size: 13px; padding: 4px; background: #f5f5f5; color: #333; border-radius: 4px;")
         self.info_label.setWordWrap(True)
         layout.addWidget(self.info_label)
         thumb_scroll = QScrollArea()

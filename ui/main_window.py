@@ -113,6 +113,23 @@ class MainWindow(QMainWindow):
         self.btn_export.clicked.connect(self._on_export)
         toolbar.addWidget(self.btn_export)
         toolbar.addStretch()
+
+        toolbar.addWidget(QLabel("排序优先级:"))
+        self.priority_combo = QComboBox()
+        self.priority_combo.setMinimumWidth(180)
+        self._priority_presets = {
+            "EXIF → 修改时间 → 创建时间 → 文件名": ["exif", "mtime", "ctime", "filename"],
+            "修改时间 → 创建时间 → EXIF → 文件名": ["mtime", "ctime", "exif", "filename"],
+            "文件名 → EXIF → 修改时间 → 创建时间": ["filename", "exif", "mtime", "ctime"],
+        }
+        for label in self._priority_presets:
+            self.priority_combo.addItem(label)
+        self.priority_combo.addItem("自定义...")
+        self._sync_priority_combo()
+        self.priority_combo.currentTextChanged.connect(self._on_priority_changed)
+
+        toolbar.addWidget(self.priority_combo)
+
         toolbar.addWidget(QLabel("显示:"))
         self.filter_combo = QComboBox()
         self.filter_combo.addItems(["全部", "待处理", "已自动分类", "冲突", "待确认", "已确认", "已跳过"])
@@ -259,6 +276,7 @@ class MainWindow(QMainWindow):
         cats = self.db.get_all_categories()
         self.category_panel.load_categories(cats)
         self.pinyin_index.build(cats)
+        self.groups = self.db.load_all_groups_as_models()
         self._refresh_group_list()
         self._update_stats()
 
@@ -480,6 +498,29 @@ class MainWindow(QMainWindow):
         dlg = SettingsDialog(self.config, self)
         if dlg.exec() == QDialog.Accepted:
             self.config = dlg.get_config()
+            self._sync_priority_combo()
+
+    def _sync_priority_combo(self):
+        """同步当前 config 的 timestamp_priority 到工具栏下拉框"""
+        current = self.config.timestamp_priority
+        self.priority_combo.blockSignals(True)
+        matched = False
+        for label, order in self._priority_presets.items():
+            if current == order:
+                self.priority_combo.setCurrentText(label)
+                matched = True
+                break
+        if not matched:
+            self.priority_combo.setCurrentText("自定义...")
+        self.priority_combo.blockSignals(False)
+
+    def _on_priority_changed(self, text: str):
+        if text == "自定义...":
+            self._on_settings()
+            return
+        order = self._priority_presets.get(text)
+        if order:
+            self.config.timestamp_priority = list(order)
 
 
 class SettingsDialog(QDialog):

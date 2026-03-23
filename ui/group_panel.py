@@ -60,6 +60,9 @@ class GroupPanel(QWidget):
         self.table.setSelectionMode(QAbstractItemView.SingleSelection)
         self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
         self.table.verticalHeader().setDefaultSectionSize(28)
+        self.table.setStyleSheet(
+            "QTableWidget::item:selected { background-color: #1976D2; color: #fff; }"
+        )
         self.table.itemSelectionChanged.connect(self._on_selection_changed)
         layout.addWidget(self.table)
 
@@ -86,9 +89,11 @@ class GroupPanel(QWidget):
             items = [str(group.id), group.time_span_str, str(group.file_count),
                      group.detected_tag or "", group.category_path or "",
                      STATUS_LABELS.get(group.status, group.status)]
+            fg_brush = QBrush(QColor(0, 0, 0))
             for col, text in enumerate(items):
                 item = QTableWidgetItem(text)
                 item.setBackground(brush)
+                item.setForeground(fg_brush)
                 item.setData(Qt.UserRole, group.id)
                 self.table.setItem(row, col, item)
         count_text = f"分组列表 ({len(self._filtered)}"
